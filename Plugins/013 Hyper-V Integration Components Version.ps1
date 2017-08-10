@@ -1,4 +1,4 @@
-��$Title = "Hyper-V Integration Components Version"
+$Title = "Hyper-V Integration Components Version"
 
 $Header ="Hyper-V Integration Components Version"
 
@@ -78,9 +78,18 @@ function Get-VMICVersion {
 
 
 
- $guests = Get-WmiObject -Namespace root\virtualization -ComputerName $hostName `
+ IF ((Get-SCVMHost -ComputerName $hostName).hypervversion -eq "6.1.7601.17514") {
+          $guests = Get-WmiObject -Namespace root\virtualization -ComputerName $hostName -Query "SELECT * FROM Msvm_ComputerSystem WHERE EnabledState=2 AND NOT Caption LIKE 'Hosting Computer System'"
+         }
 
- -Query "SELECT * FROM Msvm_ComputerSystem WHERE EnabledState=2 AND NOT Caption LIKE 'Hosting Computer System'"
+ IF ((Get-SCVMHost -ComputerName $hostName).hypervversion -like "6.2.*") {
+         $guests = Get-WmiObject -Namespace root\virtualization\v2 -ComputerName $hostName -Query "SELECT * FROM Msvm_ComputerSystem WHERE EnabledState=2 AND NOT Caption LIKE 'Hosting Computer System'"
+       }
+
+ IF ((Get-SCVMHost -ComputerName $hostName).hypervversion -like "6.3.*") {
+          $guests = Get-WmiObject -Namespace root\virtualization\v2 -ComputerName $hostName -Query "SELECT * FROM Msvm_ComputerSystem WHERE EnabledState=2 AND NOT Caption LIKE 'Hosting Computer System'"
+      }
+
 
 
 
@@ -99,10 +108,19 @@ function Get-VMICVersion {
  Try {
 
 
+IF ((Get-SCVMHost -ComputerName $hostName).hypervversion -eq "6.1.7601.17514") {
+           $guestKVP = Get-WmiObject -Namespace root\virtualization -ComputerName $hostName -Query "ASSOCIATORS OF {$guestName} WHERE AssocClass=Msvm_SystemDevice ResultClass=Msvm_KvpExchangeComponent" -ErrorAction Stop
+         }
 
- $guestKVP = Get-WmiObject -Namespace root\virtualization -ComputerName $hostName `
+ IF ((Get-SCVMHost -ComputerName $hostName).hypervversion -like "6.2.*") {
+          $guestKVP = Get-WmiObject -Namespace root\virtualization\v2 -ComputerName $hostName -Query "ASSOCIATORS OF {$guestName} WHERE AssocClass=Msvm_SystemDevice ResultClass=Msvm_KvpExchangeComponent" -ErrorAction Stop
+       }
 
- -Query "ASSOCIATORS OF {$guestName} WHERE AssocClass=Msvm_SystemDevice ResultClass=Msvm_KvpExchangeComponent"  ErrorAction Stop
+ IF ((Get-SCVMHost -ComputerName $hostName).hypervversion -like "6.3.*") {
+           $guestKVP = Get-WmiObject -Namespace root\virtualization\v2 -ComputerName $hostName -Query "ASSOCIATORS OF {$guestName} WHERE AssocClass=Msvm_SystemDevice ResultClass=Msvm_KvpExchangeComponent" -ErrorAction Stop
+      }
+
+
 
 
 
